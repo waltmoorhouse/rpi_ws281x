@@ -6,3 +6,7 @@ newtest
 *.o
 *.a
 *.swp
+
+.idea/
+build/
+**/*.class

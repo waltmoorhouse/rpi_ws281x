@@ -1,3 +1,22 @@
+# Java JNI
+
+Most of the C code is from jgarff/rpi_ws_281x, but I have added java.h and com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI.cpp as well as the Java code to produce the JNI header file. 
+The build_jni.sh script will handle everything except downloading a jar and deploying the shared library it generates.
+
+## Instructions for use with Java
+
+First ssh into your raspberry pi (I have only tested this on a 3B+) and clone this repo to the Pi.  
+If you don't already have build tools and Java installed, you can run the prep_pi.sh script.  
+Next download the javax.annotation-api-1.3.2.jar  
+Set the JAVA_HOME variable.  If you used the prep_pi script, you can use the below command:
+``export JAVA_HOME=/usr/lib/jvm/bellsoft-java12-arm32-vfp-hflt/``  
+Set the ANNOTATION_JAR_PATH variable to the full path of the jar you downloaded.  
+Then run build_jni.sh which will create a file in build/generated/ called libRaspberryPiWs2811LedStripJNI.so.  
+Move this file to /usr/java/packages/lib/ (this is one of the places java will check for shared libs automatically, so you don't have to specify the location every time you run a java program that tries to access it.)  
+Now, you can write a Java program and include the RaspberryPiWs2811LedStripJNI.java file and call the native methods just like any other Java class.  Just remember that you must call 
+``System.loadLibrary("RaspberryPiWs2811LedStripJNI");`` 
+before using any of the native method. 
+
 rpi_ws281x
 ==========
 
@@ -14,7 +33,7 @@ Language-specific bindings for rpi_ws281x are available in:
 * Python - https://github.com/rpi-ws281x/rpi-ws281x-python
 * Rust - https://github.com/rpi-ws281x/rpi-ws281x-rust
 * Powershell - https://github.com/rpi-ws281x/rpi-ws281x-powershell
-* Java - https://github.com/rpi-ws281x/rpi-ws281x-java
+* Java - https://github.com/rpi-ws281x/rpi-ws281x-java  <- This one uses Java to call Python to call C, and I could not get it to work at all, plus, that just seems way too complicated to me when you can just call C directly.
 * CSharp - https://github.com/rpi-ws281x/rpi-ws281x-csharp
 * Go - https://github.com/rpi-ws281x/rpi-ws281x-go
 

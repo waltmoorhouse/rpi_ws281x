@@ -8,7 +8,7 @@ The build_jni.sh script will handle everything except downloading a jar and depl
 First ssh into your raspberry pi (I have only tested this on a 3B+) and clone this repo to the Pi.  
 If you don't already have build tools and Java installed, you can run the prep_pi.sh script.  
 Next download the javax.annotation-api-1.3.2.jar  
-Set the JAVA_HOME variable.  If you used the prep_pi script, you can use the below command:
+Set the JAVA_HOME variable.  If you used the prep_pi script, you can use the below command:  
 ``export JAVA_HOME=/usr/lib/jvm/bellsoft-java12-arm32-vfp-hflt/``  
 Set the ANNOTATION_JAR_PATH variable to the full path of the jar you downloaded.  
 Then run build_jni.sh which will create a file in build/generated/ called libRaspberryPiWs2811LedStripJNI.so.  
@@ -16,6 +16,9 @@ Move this file to /usr/java/packages/lib/ (this is one of the places java will c
 Now, you can write a Java program and include the RaspberryPiWs2811LedStripJNI.java file and call the native methods just like any other Java class.  Just remember that you must call 
 ``System.loadLibrary("RaspberryPiWs2811LedStripJNI");`` 
 before using any of the native method. 
+
+If you are unsure about your settings, I recommend using scons to compile the test C app and run it to determine what
+your LED string type is, etc.
 
 rpi_ws281x
 ==========

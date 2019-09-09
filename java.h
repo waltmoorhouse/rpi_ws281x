@@ -21,5 +21,6 @@ typedef unsigned long long int      uint64_t;
 typedef uint32_t                    ws2811_led_t;
 
 ws2811_led_t convertRGBtoLEDvalue(jint, jint, jint);
+ws2811_led_t convertHexToLEDvalue(JNIEnv *, jstring);
 
 #endif //WS281X_JNI_SUPPORT_H

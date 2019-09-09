@@ -90,9 +90,19 @@ JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs281
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    setPixel
+ * Signature: (ILjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setPixel__ILjava_lang_String_2
+(JNIEnv * env, jobject jobj, jint led, jstring hexVal){
+    ledString.channel[0].leds[led] = convertHexToLEDvalue(env, hexVal);
+}
+
+/*
+ * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
+ * Method:    setPixel
  * Signature: (IIII)V
  */
-JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setPixel
+JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setPixel__IIII
 (JNIEnv * env, jobject jobj, jint led, jint red, jint green, jint blue) {
     ledString.channel[0].leds[led] = convertRGBtoLEDvalue(red, green, blue);
 }
@@ -100,9 +110,24 @@ JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811Le
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    setStrip
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setStrip__Ljava_lang_String_2
+(JNIEnv * env, jobject jobj, jstring hexVal) {
+    int numLeds = ledString.channel[0].count;
+    ws2811_led_t color = convertHexToLEDvalue(env, hexVal);
+
+    for (int i=0; i<numLeds; i++) {
+        ledString.channel[0].leds[i] = color;
+    }
+}
+
+/*
+ * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
+ * Method:    setStrip
  * Signature: (III)V
  */
-JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setStrip
+JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setStrip__III
 (JNIEnv * env, jobject jobj, jint red, jint green, jint blue) {
     int numLeds = ledString.channel[0].count;
     ws2811_led_t color = convertRGBtoLEDvalue(red, green, blue);
@@ -145,6 +170,15 @@ JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs281
 JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_disconnect
 (JNIEnv * env, jobject jobj) {
     ws2811_fini(&ledString);
+}
+
+ws2811_led_t convertHexToLEDvalue(JNIEnv * env, jstring hexVal) {
+    ws2811_led_t colorValue;
+    std::stringstream colorStream;
+    const char *hexValString = env->GetStringUTFChars(hexVal, 0);
+    colorStream << hexValString;
+    colorStream >> std::hex >> colorValue;
+    return colorValue;
 }
 
 ws2811_led_t convertRGBtoLEDvalue(jint red, jint green, jint blue) {

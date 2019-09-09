@@ -21,7 +21,7 @@ public class RaspberryPiWs2811LedStripJNI {
 	 */
 	public RaspberryPiWs2811LedStripJNI() {
 		initInternal(
-				"RGB",
+				"GRB",
 				30,       // leds
 				18,
 				800000,  // freq hz
@@ -35,7 +35,7 @@ public class RaspberryPiWs2811LedStripJNI {
 	/**
 	 * Create an LED strip with the given settings
 	 *
-	 * @param stripType   RGB, GBR, or RGBW
+	 * @param stripType   RGB, GBR, RGBW, etc.
 	 * @param ledsCount   The number of LEDs in the strip
 	 * @param gpioPin     The Raspberry Pi GPIO pin
 	 * @param frequencyHz Frequency of updates in Hertz
@@ -56,6 +56,14 @@ public class RaspberryPiWs2811LedStripJNI {
 	private native String initInternal(String stripType, int ledsCount, int gpioPin, int frequencyHz, int dma, int brightness, int pwmChannel, boolean invert);
 
 	/**
+	 * Sets an individual pixel to an html color code. Do not send the '#' prefix
+	 *
+	 * @param pixel pixel location in strip
+	 * @param rgbHex 6 character 0 filled hex, so white is ffffff, red is ff0000, green is 00ff00, blue is 0000ff, etc.
+	 */
+	public native void setPixel(int pixel, String rgbHex);
+
+	/**
 	 * Set the color of an individual pixel
 	 *
 	 * @param pixel The index of the pixel in the strip
@@ -64,6 +72,13 @@ public class RaspberryPiWs2811LedStripJNI {
 	 * @param blue The blue value (0 - 255)
 	 */
 	public native void setPixel(int pixel, int red, int green, int blue);
+
+	/**
+	 * Sets the entire strip to an html color code. Do not send the '#' prefix.
+	 *
+	 * @param rgbHex 6 character 0 filled hex, so white is ffffff, red is ff0000, green is 00ff00, blue is 0000ff, etc.
+	 */
+	public native void setStrip(String rgbHex);
 
 	/**
 	 * Set all LEDs in the strip to one color

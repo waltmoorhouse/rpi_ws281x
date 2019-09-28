@@ -18,38 +18,45 @@ extern "C"
 }
 #endif
 
-ws2811_t ledString =
-    {
-        .freq = WS2811_TARGET_FREQ,
-        .dmanum = 10,
-        .channel =
-            {
-                [0] =
-                    {
-                        .gpionum = 18,
-                        .invert = 0,
-                        .count = 30,
-                        .strip_type = WS2811_STRIP_RGB,
-                        .brightness = 255,
-                    },
-                [1] =
-                    {
-                        .gpionum = 0,
-                        .invert = 0,
-                        .count = 0,
-                        .brightness = 0,
-                    },
-            },
-    };
+const int MAX_STRIPS  = 10;
+
+ws2811_t ledStrips[MAX_STRIPS];
 
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
- * Method:    initInternal
- * Signature: (IIIIIIZ)Ljava/lang/String;
+ * Method:    addStrip
+ * Signature: (Ljava/lang/String;IIIIIIZ)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_initInternal
+JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_addStrip
         (JNIEnv * env, jobject jobj, jstring jStripType, jint ledCount, jint gpioPin, jint frequencyHz, jint dma,
                 jint brightness, jint pwmChannel, jboolean invert) {
+    int nextStripId = (sizeof ledStrips / sizeof *ledStrips);
+    if (nextStripId == MAX_STRIPS) {
+        return env->NewStringUTF("Maximum Number of LED Strips added!");
+    }
+    ws2811_t ledString =
+            {
+                    .freq = WS2811_TARGET_FREQ,
+                    .dmanum = 10,
+                    .channel =
+                            {
+                                    [0] =
+                                            {
+                                                    .gpionum = 18,
+                                                    .invert = 0,
+                                                    .count = 30,
+                                                    .strip_type = WS2811_STRIP_RGB,
+                                                    .brightness = 255,
+                                            },
+                                    [1] =
+                                            {
+                                                    .gpionum = 0,
+                                                    .invert = 0,
+                                                    .count = 0,
+                                                    .brightness = 0,
+                                            },
+                            },
+            };
 
     ledString.freq = frequencyHz;
     ledString.dmanum = dma;
@@ -84,92 +91,100 @@ JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs281
     }
     env->ReleaseStringUTFChars(jStripType, stripType);
 
-    return env->NewStringUTF(ws2811_get_return_t_str(ws2811_init(&ledString)));
+    const char *ret = ws2811_get_return_t_str(ws2811_init(&ledString));
+    std::string success ("Success");
+    if (success.compare(ret)) {
+        ledStrips[nextStripId] = ledString;
+        std::stringstream stripIdStream;
+        stripIdStream << nextStripId;
+        return env->NewStringUTF(stripIdStream.str().c_str());
+    }
+    return env->NewStringUTF(ret);
 }
 
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    setPixel
- * Signature: (ILjava/lang/String;)V
+ * Signature: (IILjava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setPixel__ILjava_lang_String_2
-(JNIEnv * env, jobject jobj, jint led, jstring hexVal){
-    ledString.channel[0].leds[led] = convertHexToLEDvalue(env, hexVal);
+JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setPixel__IILjava_lang_String_2
+(JNIEnv * env, jobject jobj, jint stripId, jint led, jstring hexVal){
+    ledStrips[stripId].channel[0].leds[led] = convertHexToLEDvalue(env, hexVal);
 }
 
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    setPixel
- * Signature: (IIII)V
+ * Signature: (IIIII)V
  */
-JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setPixel__IIII
-(JNIEnv * env, jobject jobj, jint led, jint red, jint green, jint blue) {
-    ledString.channel[0].leds[led] = convertRGBtoLEDvalue(red, green, blue);
+JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setPixel__IIIII
+(JNIEnv * env, jobject jobj, jint stripId, jint led, jint red, jint green, jint blue) {
+    ledStrips[stripId].channel[0].leds[led] = convertRGBtoLEDvalue(red, green, blue);
 }
 
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    setStrip
- * Signature: (Ljava/lang/String;)V
+ * Signature: (ILjava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setStrip__Ljava_lang_String_2
-(JNIEnv * env, jobject jobj, jstring hexVal) {
-    int numLeds = ledString.channel[0].count;
+JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setStrip__ILjava_lang_String_2
+(JNIEnv * env, jobject jobj, jint stripId, jstring hexVal) {
+    int numLeds = ledStrips[stripId].channel[0].count;
     ws2811_led_t color = convertHexToLEDvalue(env, hexVal);
 
     for (int i=0; i<numLeds; i++) {
-        ledString.channel[0].leds[i] = color;
+        ledStrips[stripId].channel[0].leds[i] = color;
     }
 }
 
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    setStrip
- * Signature: (III)V
+ * Signature: (IIII)V
  */
-JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setStrip__III
-(JNIEnv * env, jobject jobj, jint red, jint green, jint blue) {
-    int numLeds = ledString.channel[0].count;
+JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_setStrip__IIII
+(JNIEnv * env, jobject jobj, jint stripId, jint red, jint green, jint blue) {
+    int numLeds = ledStrips[stripId].channel[0].count;
     ws2811_led_t color = convertRGBtoLEDvalue(red, green, blue);
 
     for (int i=0; i<numLeds; i++) {
-        ledString.channel[0].leds[i] = color;
+        ledStrips[stripId].channel[0].leds[i] = color;
     }
 }
 
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    render
- * Signature: ()Ljava/lang/String;
+ * Signature: (I)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_render
-        (JNIEnv * env, jobject jobj) {
-    return env->NewStringUTF(ws2811_get_return_t_str(ws2811_render(&ledString)));
+        (JNIEnv * env, jobject jobj, jint stripId) {
+    return env->NewStringUTF(ws2811_get_return_t_str(ws2811_render(&ledStrips[stripId])));
 }
 
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    clear
- * Signature: ()Ljava/lang/String;
+ * Signature: (I)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_clear
-        (JNIEnv * env, jobject jobj) {
-    int numLeds = ledString.channel[0].count;
+        (JNIEnv * env, jobject jobj, jint stripId) {
+    int numLeds = ledStrips[stripId].channel[0].count;
 
     for (int i=0; i<numLeds; i++) {
-        ledString.channel[0].leds[i] = 0;
+        ledStrips[stripId].channel[0].leds[i] = 0;
     }
-    return env->NewStringUTF(ws2811_get_return_t_str(ws2811_render(&ledString)));
+    return env->NewStringUTF(ws2811_get_return_t_str(ws2811_render(&ledStrips[stripId])));
 }
 
 /*
  * Class:     com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI
  * Method:    disconnect
- * Signature: ()V
+ * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_disconnect
-(JNIEnv * env, jobject jobj) {
-    ws2811_fini(&ledString);
+(JNIEnv * env, jobject jobj, jint stripId) {
+    ws2811_fini(&ledStrips[stripId]);
 }
 
 ws2811_led_t convertHexToLEDvalue(JNIEnv * env, jstring hexVal) {

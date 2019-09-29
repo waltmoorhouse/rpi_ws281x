@@ -19,6 +19,7 @@ extern "C"
 #endif
 
 const int MAX_STRIPS  = 10;
+int addedStrips = 0;
 
 ws2811_t ledStrips[MAX_STRIPS];
 
@@ -30,8 +31,7 @@ ws2811_t ledStrips[MAX_STRIPS];
 JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_addStrip
         (JNIEnv * env, jobject jobj, jstring jStripType, jint ledCount, jint gpioPin, jint frequencyHz, jint dma,
                 jint brightness, jint pwmChannel, jboolean invert) {
-    int nextStripId = (sizeof ledStrips / sizeof *ledStrips);
-    if (nextStripId == MAX_STRIPS) {
+    if (addedStrips == MAX_STRIPS) {
         return env->NewStringUTF("Maximum Number of LED Strips added!");
     }
     ws2811_t ledString =
@@ -92,11 +92,11 @@ JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs281
     env->ReleaseStringUTFChars(jStripType, stripType);
 
     const char *ret = ws2811_get_return_t_str(ws2811_init(&ledString));
-    std::string success ("Success");
-    if (success.compare(ret)) {
-        ledStrips[nextStripId] = ledString;
+    if (strcmp("Success", ret) == 0) {
+        ledStrips[addedStrips] = ledString;
         std::stringstream stripIdStream;
-        stripIdStream << nextStripId;
+        stripIdStream << addedStrips;
+        addedStrips++;
         return env->NewStringUTF(stripIdStream.str().c_str());
     }
     return env->NewStringUTF(ret);
@@ -185,6 +185,7 @@ JNIEXPORT jstring JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs281
 JNIEXPORT void JNICALL Java_com_waltmoorhouse_jni_rpi_ws2811_RaspberryPiWs2811LedStripJNI_disconnect
 (JNIEnv * env, jobject jobj, jint stripId) {
     ws2811_fini(&ledStrips[stripId]);
+    addedStrips--;
 }
 
 ws2811_led_t convertHexToLEDvalue(JNIEnv * env, jstring hexVal) {
